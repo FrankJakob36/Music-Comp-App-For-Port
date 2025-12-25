@@ -1,0 +1,25 @@
+{% extends 'base_generic.html' %}
+
+{% block title %}Post a New Message{% endblock %}
+
+{% block content %}
+  <h1>Post a New Message</h1>
+
+  {# Display any Django success/error messages #}
+  {% if messages %}
+    <ul class="alerts">
+      {% for msg in messages %}
+        <li class="{{ msg.tags }}">{{ msg }}</li>
+      {% endfor %}
+    </ul>
+  {% endif %}
+
+  {# Your message form #}
+  <form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit">Post Message</button>
+  </form>
+
+  <p><a href="{% url 'forum' %}">← Back to Forum</a></p>
+{% endblock %}

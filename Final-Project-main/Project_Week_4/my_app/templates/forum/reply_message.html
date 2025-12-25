@@ -1,0 +1,15 @@
+{% extends 'base_generic.html' %}
+
+{% block content %}
+  <h2>Reply to Message</h2>
+  
+  <!-- Display the original message -->
+  <p><strong>Original Message:</strong> {{ parent_message.content }}</p>
+
+  <!-- Reply form -->
+  <form method="POST">
+    {% csrf_token %}
+    {{ form.as_p }}  <!-- Renders the form fields (in this case, the content field for the reply) -->
+    <button type="submit">Reply</button>
+  </form>
+{% endblock %}
