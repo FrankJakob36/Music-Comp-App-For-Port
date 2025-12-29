@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Delete Message</title>
+</head>
+<body>
+
+    <div style="border: 1px solid #ccc; padding: 20px; max-width: 500px; margin: 50px auto; font-family: sans-serif;">
+        
+        <h2>⚠ Delete Message?</h2>
+        <p>Are you sure you want to delete this message?</p>
+        
+        <div style="background-color: #f9f9f9; padding: 10px; margin-bottom: 20px; font-style: italic;">
+            "{{ post.body }}" 
+            </div>
+
+        <form method="POST">
+            {% csrf_token %}
+            <button type="submit" style="background-color: red; color: white; padding: 10px 20px; border: none; cursor: pointer;">
+                Yes, Delete It
+            </button>
+            
+            <a href="{% url 'forum' %}" style="margin-left: 10px; text-decoration: none; color: blue;">
+                Cancel
+            </a>
+        </form>
+
+    </div>
+
+</body>
+</html>

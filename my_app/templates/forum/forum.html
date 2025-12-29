@@ -5,6 +5,16 @@
 {% block content %}
   <h1 style="color: red;">Welcome To The Forums!</h1>
 
+  {# --- OPTIONAL: Form to Create a NEW Thread (at the top) --- #}
+  {# You need to ensure your view passes a generic 'form' for this to work #}
+  {% if user.is_authenticated %}
+    <div style="margin-bottom: 20px;">
+        <a  href="/forum/post">+Start A Discussion </a>
+          
+        </a>
+    </div>
+  {% endif %}
+
   {# Show Django’s success/error notifications #}
   {% if messages %}
     <ul class="alerts">
@@ -21,11 +31,36 @@
         <h2>{{ message.content }}</h2>
         <p>Posted by {{ message.user.username }} on {{ message.created_at }}</p>
 
+        {# ======================================================= #}
+        {# Edit/Delete Buttons (Only for Author or Admin)          #}
+        {# ======================================================= #}
+        {% if user == message.user or user.is_superuser %}
+          <div style="margin-bottom: 15px; font-size: 0.9rem;">
+            <a href="{% url 'edit_message' message.id %}" style="margin-right: 10px; color: #007bff; text-decoration: none;">
+                &#9998; Edit
+            </a>
+            <a href="{% url 'delete_message' message.id %}" style="color: #dc3545; text-decoration: none;">
+                &#128465; Delete
+            </a>
+          </div>
+        {% endif %}
+        {# ======================================================= #}
+
         <h3>Replies:</h3>
         {% if message.replies.all %}
           {% for reply in message.replies.all %}
-            <div class="reply" style="margin-left:20px; border-left:2px solid #ccc; padding-left:10px;">
+            <div class="reply" style="margin-left:20px; border-left:2px solid #ccc; padding-left:10px; margin-bottom: 10px;">
               <strong>{{ reply.user.username }}</strong> – {{ reply.created_at }}
+              
+              {# --- NEW: Edit/Delete for REPLIES --- #}
+              {% if user == reply.user or user.is_superuser %}
+                <span style="font-size: 0.8rem; margin-left: 10px;">
+                    {# Note: You need to define these URLs in your urls.py #}
+                    <a href="{% url 'edit_reply' reply.id %}" style="color: #007bff; margin-right:5px;">Edit</a>
+                    <a href="{% url 'delete_reply' reply.id %}" style="color: #dc3545;">Delete</a>
+                </span>
+              {% endif %}
+              
               <p>{{ reply.content }}</p>
             </div>
           {% endfor %}
@@ -37,7 +72,7 @@
           <a href="#reply-form"
              class="reply-link"
              data-msg-id="{{ message.id }}">
-            Reply
+            Reply to this thread
           </a>
         </p>
       </div>
@@ -46,51 +81,52 @@
   {% else %}
     <p>No messages yet. Be the first to post!</p>
   {% endif %}
-{% endblock %}
 
-{% block reply_form %}
+  {# ======================================================= #}
+  {# MOVED: Reply Form is now inside the content block       #}
+  {# so it is guaranteed to render.                          #}
+  {# ======================================================= #}
   {% if user.is_authenticated %}
-    <div id="reply-form">
-      <h2>Reply to a Message</h2>
+    <div id="reply-form" style="margin-top: 50px; padding: 20px; background-color: #f9f9f9; border: 1px solid #ddd;">
+      <h2 id="form-title">Post a Message / Reply</h2>
       <form method="post" action="{% url 'forum' %}">
         {% csrf_token %}
         {{ reply_form.as_p }}
 
         {# Hidden field for message ID, set by JS #}
-        <input type="hidden" name="message_id" id="reply-message-id" required>
+        <input type="hidden" name="message_id" id="reply-message-id">
 
-        <button type="submit">Reply</button>
+        <button type="submit">Submit</button>
       </form>
     </div>
   {% else %}
-    <p><a href="{% url 'login' %}">Log in</a> to reply.</p>
+    <p><a href="{% url 'login' %}">Log in</a> to reply or post.</p>
   {% endif %}
+
 {% endblock %}
 
 {% block extra_scripts %}
 <script>
   document.addEventListener('DOMContentLoaded', function() {
-    console.log('JavaScript loaded');  // Debugging line to confirm JS execution
+    console.log('JavaScript loaded');
 
     document.querySelectorAll('.reply-link').forEach(function(link) {
-      console.log('Reply link found for message ID:', link.getAttribute('data-msg-id'));
-
       link.addEventListener('click', function(e) {
-        e.preventDefault();  // Prevent default link behavior
+        e.preventDefault();
 
         const msgId = this.getAttribute('data-msg-id');
-        console.log('Clicked reply for message ID:', msgId);  // Debugging line
+        console.log('Clicked reply for message ID:', msgId);
 
         if (msgId) {
+          // Set the hidden ID
           document.getElementById('reply-message-id').value = msgId;
-          console.log('Hidden input set with message ID:', msgId);
+          // Change title to "Reply"
+          document.getElementById('form-title').innerText = "Reply to Message";
+          // Scroll to form
           document.getElementById('reply-form').scrollIntoView({ behavior: 'smooth' });
-        } else {
-          console.log('No message ID found!');
         }
       });
     });
   });
 </script>
 {% endblock %}
-

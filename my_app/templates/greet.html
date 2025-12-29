@@ -3,193 +3,481 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>{% block title %}Compose Music!{% endblock %}</title>
+  <title>Drum & Piano Studio</title>
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+
   <style>
-    /* (Your existing CSS unchanged) */
-    html, body { height:100%; margin:0; padding:0; }
-    body { display:flex; flex-direction:column; font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color:#f9f9f9; color:#333; padding-top:60px; }
-    nav { background-color:#333; position:fixed; top:0; left:0; right:0; height:60px; display:flex; align-items:center; z-index:1000; }
-    nav ul { list-style:none; margin:0 auto; padding:0; display:flex; }
-    nav li { margin:0 20px; }
-    nav a { color:#fff; text-decoration:none; padding:15px 20px; display:inline-block; transition:background 0.3s; }
-    nav a:hover { background-color:#555; border-radius:5px; }
-    main { flex:1; text-align:center; padding:20px; }
-    h1 { font-size:2.5em; margin-bottom:1rem; }
-    .keyboard { display:flex; justify-content:center; flex-wrap:wrap; margin:20px auto; max-width:500px; }
-    .key { padding:20px; margin:8px; background-color:#007bff; color:white; border:none; border-radius:8px; cursor:pointer; font-size:18px; width:60px; text-align:center; transition:background 0.3s; }
-    .key:hover { background-color:#0056b3; }
-    .controls { margin:20px; }
-    .controls button { padding:10px 25px; margin:10px; font-size:16px; background-color:#28a745; color:white; border:none; border-radius:6px; cursor:pointer; transition:background 0.3s; }
-    .controls button:hover { background-color:#218838; }
-    .composition { font-size:18px; margin-top:10px; }
-    audio { margin-top:20px; width:100%; max-width:600px; background:#eee; border-radius:8px; }
-    #login, #signup { max-width:400px; margin:40px auto; background:#fff; padding:25px; border-radius:8px; box-shadow:0 0 10px rgba(0,0,0,0.1); text-align:left; }
-    #login h2, #signup h2 { text-align:center; margin-bottom:15px; }
-    form .messages { color:red; text-align:center; margin-bottom:10px; }
-    form button { margin-top:10px; padding:10px 20px; background:#007bff; border:none; color:white; border-radius:5px; cursor:pointer; width:100%; }
-    form button:hover { background:#0056b3; }
-    footer { background:#e9e9e9; padding:20px; text-align:center; }
-    .signout-button { background:#f44336; color:white; border:none; padding:10px 20px; border-radius:5px; cursor:pointer; transition:background 0.3s; }
-    .signout-button:hover { background:#d32f2f; }
-    footer a { color:#007bff; text-decoration:none; font-weight:bold; }
-    footer a:hover { text-decoration:underline; }
+    /* --- CSS STYLES --- */
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      margin: 0; padding: 0;
+      background-color: #2c3e50; 
+      color: white;
+      display: flex; flex-direction: column; align-items: center;
+      min-height: 100vh;
+    }
+    
+    /* --- NAVIGATION --- */
+    nav { 
+        background-color: #1a252f; width: 100%; padding: 15px; 
+        text-align: center; margin-bottom: 20px; 
+        display: flex; justify-content: center; align-items: center;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    }
+    nav a { color: #ecf0f1; text-decoration: none; margin: 0 15px; font-weight: bold; font-size: 1.1rem; }
+    nav a:hover { color: #1abc9c; }
+
+    .logout-btn {
+        background: none; border: none; color: #ecf0f1;
+        font-weight: bold; font-size: 1.1rem; cursor: pointer;
+        margin: 0 15px; text-decoration: none;
+    }
+
+    .machine-wrapper {
+      background: #34495e; padding: 25px; border-radius: 12px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.4); margin-top: 10px;
+      text-align: center; max-width: 1100px; width: 95%;
+    }
+
+    /* --- GRID STYLES --- */
+    #grid-container {
+      display: grid; gap: 4px; background: #222;
+      padding: 12px; border-radius: 8px;
+      overflow-x: auto; 
+      margin-bottom: 20px;
+      border: 1px solid #444;
+    }
+
+    .row-label { 
+      background: #16a085; color: white; 
+      display: flex; align-items: center; justify-content: center; 
+      border-radius: 4px; font-size: 0.8rem;
+      position: sticky; left: 0; z-index: 10;
+      padding: 0 5px; min-width: 160px; 
+      box-shadow: 2px 0 5px rgba(0,0,0,0.5);
+    }
+
+    .sound-select {
+        background: #1abc9c; color: #fff;
+        border: none; border-radius: 3px;
+        font-size: 0.8rem; width: 100%;
+        padding: 6px; cursor: pointer; font-weight: bold;
+    }
+
+    .beat-box { 
+        background: #95a5a6; height: 40px; min-width: 35px; 
+        border-radius: 3px; cursor: pointer; 
+        transition: all 0.1s;
+    }
+    
+    .beat-box.normal { background-color: #3498db; } /* Blue */
+    .beat-box.accent { background-color: #e74c3c; box-shadow: inset 0 0 0 3px #fff; } /* Red */
+    .beat-box:hover { opacity: 0.8; transform: scale(0.95); }
+
+    /* --- CONTROLS --- */
+    .controls { 
+        margin-top: 20px; padding: 20px; 
+        background: #2c3e50; border-radius: 8px; 
+        display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 15px;
+    }
+    
+    button { padding: 10px 18px; cursor: pointer; border: none; border-radius: 6px; color: white; font-size: 0.9rem; font-weight: bold; transition: transform 0.1s;}
+    button:active { transform: scale(0.95); }
+    
+    .btn-play { background-color: #27ae60; min-width: 100px; font-size: 1rem; }
+    .btn-stop { background-color: #c0392b; }
+    .btn-save { background-color: #2980b9; } 
+    .btn-json { background-color: #8e44ad; } 
+    .btn-audio { background-color: #d35400; }
+    .btn-copy { background-color: #f39c12; color: #2c3e50; } /* Yellow for copy tool */
+    
+    label { font-size: 0.9rem; color: #bdc3c7; font-weight: bold; }
+    select, input { background: #ecf0f1; border: none; padding: 8px; border-radius: 4px; font-size: 0.9rem; color: #333; }
+
+    .control-group { display: flex; align-items: center; gap: 5px; background: #222; padding: 5px 10px; border-radius: 5px; }
+    
+    .login-box { margin-top: 50px; padding: 20px; border-top: 1px solid #555; width: 100%; max-width: 400px; }
+    .login-box button { width: 100%; background-color: #1abc9c; margin-top: 10px; }
   </style>
 </head>
 <body>
 
-  <!-- Navbar -->
   <nav>
-    <ul>
-      <li><a href="#home">Home</a></li>
-      {% if user.is_authenticated %}
-        <li><a href="{% url 'second_page' %}">Notes</a></li>
-      {% else %}
-        <li><a href="{% url 'login_page' %}">Login</a></li>
-        <li><a href="{% url 'signup' %}">Sign Up</a></li>
-        <li><a href="{% url 'second_page' %}">Notes</a></li>
-      {% endif %}
-    </ul>
+    <a href="/">Home</a>
+    {% if user.is_authenticated %}
+        <a href="{% url 'forum' %}">Forum</a>
+        <form action="{% url 'logout' %}" method="post" style="display:inline;">
+            {% csrf_token %}
+            <button type="submit" class="logout-btn">Logout</button>
+        </form>
+    {% else %}
+        <a href="{% url 'login_page' %}">Login</a>
+    {% endif %}
   </nav>
 
-  <!-- Main Content -->
-  <main id="home">
-    <h1>Compose Your Music 🎶</h1>
+  <h1>🎹 Drum & Piano Studio</h1>
 
-    <div class="keyboard">
-      <button class="key" onclick="addNoteAndPlay('C')">C</button>
-      <button class="key" onclick="addNoteAndPlay('D')">D</button>
-      <button class="key" onclick="addNoteAndPlay('E')">E</button>
-      <button class="key" onclick="addNoteAndPlay('F')">F</button>
-      <button class="key" onclick="addNoteAndPlay('G')">G</button>
-      <button class="key" onclick="addNoteAndPlay('A')">A</button>
-      <button class="key" onclick="addNoteAndPlay('B')">B</button>
-    </div>
-
+  <div class="machine-wrapper">
     <div class="controls">
-      <button id="play-btn">Play Composition</button>
-      <button id="save-btn">Save Composition</button>
-      <button id="new-btn">New Composition</button>
-    </div>
-
-    <div class="composition" id="composition">
-      Current Composition: None
-    </div>
-
-    <!-- Audio Player -->
-    <audio id="audio-player" controls preload="none"></audio>
-
-    <!-- Login Section -->
-    <div id="login">
-      <h2>Login</h2>
-      {% if messages %}
-        <div class="messages">
-          {% for message in messages %}
-            <p>{{ message }}</p>
-          {% endfor %}
+        <div class="control-group">
+            <label>BPM:</label>
+            <input type="number" id="bpm-input" value="120" min="40" max="300" onchange="updateTempo()">
         </div>
-      {% endif %}
-      <form method="POST">
-        {% csrf_token %}
-        {{ form.as_p }}
-        <button type="submit">Login</button>
-      </form>
-      <p>Don't have an account? <a href="{% url 'signup' %}">Sign up here</a></p>
-    </div>
-
-    <!-- Signup Section -->
-    <div id="signup">
-      <h2>Create an Account</h2>
-      {% if messages %}
-        <div class="messages">
-          {% for message in messages %}
-            <p>{{ message }}</p>
-          {% endfor %}
+        <div class="control-group">
+            <label>Measures:</label>
+            <select id="measures-select" onchange="buildGrid()">
+                <option value="1m">1 Bar</option>
+                <option value="2m" selected>2 Bars</option>
+                <option value="4m">4 Bars</option>
+                <option value="8m">8 Bars</option>
+            </select>
         </div>
-      {% endif %}
-      <form method="POST">
-        {% csrf_token %}
-        {{ form.as_p }}
-        <button type="submit">Sign Up</button>
-      </form>
-    </div>
-  </main>
+        <div class="control-group">
+            <label>Subdivision:</label>
+            <select id="speed-select" onchange="buildGrid()">
+                <option value="4n">Quarter (1/4)</option>
+                <option value="8n" selected>Eighth (1/8)</option>
+                <option value="8t">Triplets (1/8T)</option>
+                <option value="16n">Sixteenth (1/16)</option>
+                <option value="32n">32nd (1/32)</option>
+            </select>
+        </div>
 
-  <!-- Footer -->
-  <footer>
-    <h2>Created By Frank Jakob</h2>
-    <h3>
-      Want to save your music? Make an account.<br>
-      <a href="{% url 'login_page' %}">Click here to login</a> |
-      <a href="{% url 'signup' %}">Don't have an account? Make one here!</a>
-    </h3>
-    {% if user.is_authenticated %}
-      <p><a href="{% url 'post_message' %}">Forum</a></p>
-      <form method="POST" action="{% url 'logout' %}">
-        {% csrf_token %}
-        <button type="submit" class="signout-button">Sign Out</button>
-      </form>
-    {% endif %}
-  </footer>
-//script goes here
-  {% load static %}
+        <div class="control-group" style="border: 1px solid #f39c12;">
+            <label style="color: #f39c12;">Copy Bar:</label>
+            <input type="number" id="copy-src" value="1" min="1" max="8" style="width: 35px;">
+            <label style="color: #f39c12;">→</label>
+            <input type="number" id="copy-dest" value="2" min="1" max="8" style="width: 35px;">
+            <button class="btn-copy" onclick="copyMeasures()">Go</button>
+        </div>
+        
+        <div style="width: 100%; height: 10px;"></div> <button id="btn-play" class="btn-play" onclick="playBeats()">▶ Play</button>
+        <button class="btn-stop" onclick="clearAll()">🗑 Clear All</button>
+        <button class="btn-save" onclick="saveToCloud()">💾 Save Cloud</button>
+        <button class="btn-json" onclick="downloadJson()">⬇ JSON</button>
+        <button class="btn-audio" onclick="exportAudio()">🎵 Export Audio</button>
+    </div>
+
+    <div id="grid-container"></div>
+    {% csrf_token %}
+    <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
+  </div>
+
   <script>
-    // CSRF helper
-    function getCookie(name) {
-      const match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
-      return match ? match[2] : null;
+    // --- 1. SETTINGS & STATE ---
+    let songData = []; 
+    const trackIds = ['track-0', 'track-1', 'track-2', 'track-3', 'track-4', 'track-5', 'track-6', 'track-7'];
+    
+    // Default assignments
+    let trackAssignments = {
+        'track-0': 'kick',
+        'track-1': 'snare',
+        'track-2': 'hihat',
+        'track-3': 'tom1',
+        'track-4': 'piano-C4', 
+        'track-5': 'piano-E4', 
+        'track-6': 'piano-G4', 
+        'track-7': 'piano-B4'  
+    };
+
+    const gridDiv = document.getElementById('grid-container');
+    let isPlaying = false; 
+    const recorder = new Tone.Recorder();
+
+    // --- 2. AUDIO ENGINE ---
+    const drumPlayers = new Tone.Players({
+        "kick": "https://tonejs.github.io/audio/drum-samples/CR78/kick.mp3",
+        "snare": "https://tonejs.github.io/audio/drum-samples/CR78/snare.mp3",
+        "hihat": "https://tonejs.github.io/audio/drum-samples/CR78/hihat.mp3",
+        "clap": "https://tonejs.github.io/audio/drum-samples/CR78/tom1.mp3", 
+        "tom1": "https://tonejs.github.io/audio/drum-samples/CR78/tom1.mp3", 
+        "tom2": "https://tonejs.github.io/audio/drum-samples/CR78/tom2.mp3", 
+        "tom3": "https://tonejs.github.io/audio/drum-samples/CR78/tom3.mp3", 
+        "rim": "https://tonejs.github.io/audio/drum-samples/CR78/rimshot.mp3" 
+    }).toDestination();
+
+    const pianoSampler = new Tone.Sampler({
+        urls: { "C4": "C4.mp3", "D#4": "Ds4.mp3", "F#4": "Fs4.mp3", "A4": "A4.mp3" },
+        release: 1,
+        baseUrl: "https://tonejs.github.io/audio/salamander/"
+    }).toDestination();
+
+    drumPlayers.connect(recorder);
+    pianoSampler.connect(recorder);
+
+    const soundGroups = {
+        "Drums (CR78)": ["kick", "snare", "hihat", "clap"],
+        "Toms & Perc": ["tom1", "tom2", "tom3", "rim"],
+        "Piano": ["piano-C4", "piano-D4", "piano-E4", "piano-F4", "piano-G4", "piano-A4", "piano-B4", "piano-C5"]
+    };
+
+    // --- 3. GRID BUILDER ---
+    function buildGrid() {
+        gridDiv.innerHTML = ''; 
+        const speed = document.getElementById('speed-select').value;      
+        const measures = document.getElementById('measures-select').value; 
+        
+        const totalDuration = Tone.Time(measures).toSeconds();
+        const stepDuration = Tone.Time(speed).toSeconds();
+        const totalCols = Math.round(totalDuration / stepDuration);
+        
+        gridDiv.style.gridTemplateColumns = `160px repeat(${totalCols}, 1fr)`; 
+        const stepsPerMeasure = Math.round(Tone.Time("1m").toSeconds() / stepDuration);
+
+        trackIds.forEach((trackId) => {
+            const label = document.createElement('div');
+            label.className = 'row-label';
+            const select = document.createElement('select');
+            select.className = 'sound-select';
+            
+            for (const [groupName, sounds] of Object.entries(soundGroups)) {
+                const group = document.createElement('optgroup');
+                group.label = groupName;
+                sounds.forEach(sound => {
+                    const opt = document.createElement('option');
+                    opt.value = sound;
+                    let displayName = sound.replace('piano-', 'Key ').replace('tom', 'Tom ').replace('rim', 'Rimshot');
+                    displayName = displayName.charAt(0).toUpperCase() + displayName.slice(1);
+                    opt.innerText = displayName;
+                    if(trackAssignments[trackId] === sound) opt.selected = true;
+                    group.appendChild(opt);
+                });
+                select.appendChild(group);
+            }
+
+            select.onchange = (e) => {
+                trackAssignments[trackId] = e.target.value;
+                playPreview(e.target.value); 
+            };
+            label.appendChild(select);
+            gridDiv.appendChild(label);
+
+            for (let i = 0; i < totalCols; i++) {
+                const box = document.createElement('div');
+                box.className = 'beat-box';
+                box.dataset.track = trackId; 
+                // Grid lines for bars
+                if (i > 0 && i % stepsPerMeasure === 0) { box.style.borderLeft = "2px solid #666"; }
+                // Fainter lines for beats
+                else if (i > 0 && i % (stepsPerMeasure/4) === 0) { box.style.borderLeft = "1px solid #444"; }
+                
+                const time = i * stepDuration;
+                box.dataset.time = time.toFixed(4);
+                const existingNote = songData.find(note => note.track === trackId && Math.abs(note.time - time) < 0.001);
+                
+                if (existingNote) {
+                    if (existingNote.velocity > 0.8) { box.classList.add('accent'); } 
+                    else { box.classList.add('normal'); }
+                }
+                box.onclick = function() { toggleBox(this); };
+                gridDiv.appendChild(box);
+            }
+        });
     }
-  
-    let composition = [];
-  
-    function addNoteAndPlay(note) {
-      composition.push(note);
-      document.getElementById('composition').textContent = 
-        `Current Composition: ${composition.join(', ')}`;
-      // immediate playback using static MP3s
-      new Audio(`/static/my_app/sounds/${note}.mp3`).play();
+
+    // --- 4. NEW COPY FUNCTION ---
+    function copyMeasures() {
+        const srcBar = parseInt(document.getElementById('copy-src').value);
+        const destBar = parseInt(document.getElementById('copy-dest').value);
+        
+        if(srcBar === destBar) return alert("Source and Destination cannot be the same!");
+        
+        // Calculate Time Window
+        const barDuration = Tone.Time("1m").toSeconds();
+        const startTime = (srcBar - 1) * barDuration;
+        const endTime = srcBar * barDuration;
+        
+        // Calculate Offset (How much to shift the notes)
+        const timeOffset = (destBar - srcBar) * barDuration;
+        
+        // Find notes in the Source Bar
+        const notesToCopy = songData.filter(n => n.time >= startTime - 0.001 && n.time < endTime - 0.001);
+        
+        if(notesToCopy.length === 0) return alert(`Bar ${srcBar} is empty!`);
+        
+        // Add copies to songData
+        notesToCopy.forEach(note => {
+            const newTime = note.time + timeOffset;
+            
+            // Check if note already exists at destination (prevent duplicates)
+            const exists = songData.find(n => n.track === note.track && Math.abs(n.time - newTime) < 0.001);
+            if(!exists) {
+                songData.push({
+                    track: note.track,
+                    time: newTime,
+                    velocity: note.velocity
+                });
+            }
+        });
+        
+        alert(`Copied ${notesToCopy.length} notes from Bar ${srcBar} to Bar ${destBar}.`);
+        buildGrid(); // Refresh grid to show new notes
     }
-  
-    function playComposition() {
-      if (composition.length === 0) {
-        return alert('Add some notes first!');
-      }
-  
-      let index = 0;
-      const player = document.getElementById('audio-player');  // Using the audio element in HTML
-  
-      // Function to play the next note in the composition
-      function playNextNote() {
-        if (index < composition.length) {
-          const note = composition[index];
-          player.src = `/static/my_app/sounds/${note}.mp3`;
-          player.play();  // Play the audio file
-          index++;  // Move to the next note
+
+    // --- 5. LOGIC & PLAYBACK ---
+    function playPreview(soundName) {
+        if (soundName.startsWith('piano-')) {
+             const note = soundName.replace('piano-', '');
+             pianoSampler.triggerAttackRelease(note, "8n");
+        } else {
+             if (drumPlayers.loaded && drumPlayers.has(soundName)) {
+                 drumPlayers.player(soundName).start();
+             }
         }
-      }
-  
-      // Play the first note
-      playNextNote();
-  
-      // When the current note finishes, play the next one
-      player.onended = function() {
-        playNextNote();
-      };
     }
-  
-    function newComposition() {
-      composition = [];
-      document.getElementById('composition').textContent = 'Current Composition: None';
-      const player = document.getElementById('audio-player');
-      player.pause();  // Stop any audio playing
-      player.src = '';  // Clear the source
+
+    function toggleBox(box) {
+        const trackId = box.dataset.track;
+        const time = parseFloat(box.dataset.time);
+        const noteIndex = songData.findIndex(n => n.track === trackId && Math.abs(n.time - time) < 0.001);
+        const existingNote = songData[noteIndex];
+        const currentSound = trackAssignments[trackId];
+
+        if (!existingNote) {
+            songData.push({ track: trackId, time: time, velocity: 0.6 });
+            box.className = 'beat-box normal';
+            playPreview(currentSound); 
+        } else if (existingNote.velocity < 0.8) {
+            existingNote.velocity = 1.0;
+            box.className = 'beat-box accent';
+            playPreview(currentSound); 
+        } else {
+            songData.splice(noteIndex, 1);
+            box.className = 'beat-box'; 
+        }
+        if(isPlaying) playBeats(); 
     }
-  
-    // Event listeners for the buttons
-    document.getElementById('play-btn').addEventListener('click', playComposition);
-    document.getElementById('new-btn').addEventListener('click', newComposition);
+
+    async function playBeats() {
+        await Tone.start();
+        if (!drumPlayers.loaded) await Tone.loaded();
+        
+        const btn = document.getElementById('btn-play');
+        const measures = document.getElementById('measures-select').value;
+        const speed = document.getElementById('speed-select').value;
+        
+        if (isPlaying) {
+            Tone.Transport.stop();
+            isPlaying = false;
+            btn.innerText = "▶ Play";
+            btn.style.backgroundColor = "#27ae60"; 
+        } else {
+            updateTempo(); 
+            Tone.Transport.cancel(); 
+
+            songData.forEach(note => {
+                Tone.Transport.schedule((time) => {
+                    const soundName = trackAssignments[note.track]; 
+                    const velocity = (note.velocity > 0.8) ? 1 : 0.7; 
+
+                    if (soundName.startsWith('piano-')) {
+                        const noteName = soundName.replace('piano-', '');
+                        pianoSampler.triggerAttackRelease(noteName, speed, time, velocity);
+                    } else {
+                        if(drumPlayers.has(soundName)){
+                            const player = drumPlayers.player(soundName);
+                            player.volume.value = (note.velocity > 0.8) ? 0 : -6;
+                            player.start(time);
+                        }
+                    }
+                }, note.time);
+            });
+
+            Tone.Transport.loop = true;
+            Tone.Transport.loopEnd = measures; 
+            Tone.Transport.start();
+            isPlaying = true;
+            btn.innerText = "⏸ Pause";
+            btn.style.backgroundColor = "#c0392b"; 
+        }
+    }
+
+    function clearAll() { 
+        if(isPlaying) playBeats(); 
+        songData = []; 
+        buildGrid(); 
+    }
+
+    function saveToCloud() {
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+        const payload = {
+            title: "My Composition",
+            notes: songData, 
+            settings: trackAssignments 
+        };
+
+        fetch('/save-composition/', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrfToken },
+            body: JSON.stringify(payload)
+        })
+        .then(res => res.json())
+        .then(data => {
+            if(data.status === 'success') alert('Saved! ID: ' + data.id);
+            else alert('Error: ' + data.message);
+        })
+        .catch(err => alert("Error connecting to server."));
+    }
+
+    function downloadJson() {
+        const saveData = { tracks: trackAssignments, notes: songData };
+        const text = JSON.stringify(saveData, null, 2);
+        const blob = new Blob([text], { type: "application/json" });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = "beat.json";
+        link.click();
+    }
+
+    async function exportAudio() {
+        if (songData.length === 0) return alert("Make a beat first!");
+        if(isPlaying) playBeats(); 
+        
+        alert("Recording... please wait until the loop finishes.");
+        await Tone.start();
+        if (!drumPlayers.loaded) await Tone.loaded();
+        
+        updateTempo();
+        recorder.start();
+        
+        const measures = document.getElementById('measures-select').value;
+        const speed = document.getElementById('speed-select').value;
+        const totalDuration = Tone.Time(measures).toSeconds();
+        const now = Tone.now(); 
+        
+        songData.forEach(note => {
+             const time = now + note.time;
+             const soundName = trackAssignments[note.track]; 
+             const velocity = (note.velocity > 0.8) ? 1 : 0.7;
+
+             if (soundName.startsWith('piano-')) {
+                 pianoSampler.triggerAttackRelease(soundName.replace('piano-', ''), speed, time, velocity);
+             } else {
+                 if(drumPlayers.has(soundName)){
+                     const player = drumPlayers.player(soundName);
+                     player.volume.value = (note.velocity > 0.8) ? 0 : -6;
+                     player.start(time);
+                 }
+             }
+        });
+
+        setTimeout(async () => {
+            const recording = await recorder.stop();
+            const url = URL.createObjectURL(recording);
+            const anchor = document.createElement("a");
+            anchor.download = "my_beat.webm";
+            anchor.href = url;
+            anchor.click();
+            alert("Download ready!");
+        }, (totalDuration + 0.5) * 1000); 
+    }
+
+    function updateTempo() {
+        Tone.Transport.bpm.value = document.getElementById('bpm-input').value;
+    }
+
+    window.onload = function() { buildGrid(); updateTempo(); };
   </script>
-  
-  
-  
 </body>
 </html>
