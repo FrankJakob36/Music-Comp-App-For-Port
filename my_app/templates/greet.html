@@ -3,9 +3,10 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Drum & Piano Studio</title>
+  <title>Full Band Studio + Animals</title>
   
   <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/lamejs@1.2.1/lame.min.js"></script>
 
   <style>
     /* --- CSS STYLES --- */
@@ -18,7 +19,6 @@
       min-height: 100vh;
     }
     
-    /* --- NAVIGATION --- */
     nav { 
         background-color: #1a252f; width: 100%; padding: 15px; 
         text-align: center; margin-bottom: 20px; 
@@ -47,10 +47,12 @@
       overflow-x: auto; 
       margin-bottom: 20px;
       border: 1px solid #444;
+      max-height: 65vh; 
+      overflow-y: auto;
     }
 
     .row-label { 
-      background: #16a085; color: white; 
+      background: #16a085; color: white;
       display: flex; align-items: center; justify-content: center; 
       border-radius: 4px; font-size: 0.8rem;
       position: sticky; left: 0; z-index: 10;
@@ -58,24 +60,30 @@
       box-shadow: 2px 0 5px rgba(0,0,0,0.5);
     }
 
+    /* COLOR CODING SECTIONS */
+    .row-label.drums { background: #16a085; } /* Teal */
+    .row-label.bass  { background: #8e44ad; } /* Purple */
+    .row-label.piano { background: #27ae60; } /* Green */
+    .row-label.fx    { background: #e67e22; } /* Orange */
+    .row-label.animal{ background: #c0392b; } /* Red/Brown */
+
     .sound-select {
-        background: #1abc9c; color: #fff;
+        background: rgba(0,0,0,0.2); color: #fff;
         border: none; border-radius: 3px;
         font-size: 0.8rem; width: 100%;
         padding: 6px; cursor: pointer; font-weight: bold;
     }
+    option { background: #2c3e50; }
 
     .beat-box { 
-        background: #95a5a6; height: 40px; min-width: 35px; 
+        background: #95a5a6; height: 35px; min-width: 35px; 
         border-radius: 3px; cursor: pointer; 
         transition: all 0.1s;
     }
-    
-    .beat-box.normal { background-color: #3498db; } /* Blue */
-    .beat-box.accent { background-color: #e74c3c; box-shadow: inset 0 0 0 3px #fff; } /* Red */
+    .beat-box.normal { background-color: #3498db; }
+    .beat-box.accent { background-color: #e74c3c; box-shadow: inset 0 0 0 3px #fff; }
     .beat-box:hover { opacity: 0.8; transform: scale(0.95); }
 
-    /* --- CONTROLS --- */
     .controls { 
         margin-top: 20px; padding: 20px; 
         background: #2c3e50; border-radius: 8px; 
@@ -90,13 +98,11 @@
     .btn-save { background-color: #2980b9; } 
     .btn-json { background-color: #8e44ad; } 
     .btn-audio { background-color: #d35400; }
-    .btn-copy { background-color: #f39c12; color: #2c3e50; } /* Yellow for copy tool */
+    .btn-copy { background-color: #f39c12; color: #2c3e50; } 
     
     label { font-size: 0.9rem; color: #bdc3c7; font-weight: bold; }
     select, input { background: #ecf0f1; border: none; padding: 8px; border-radius: 4px; font-size: 0.9rem; color: #333; }
-
     .control-group { display: flex; align-items: center; gap: 5px; background: #222; padding: 5px 10px; border-radius: 5px; }
-    
     .login-box { margin-top: 50px; padding: 20px; border-top: 1px solid #555; width: 100%; max-width: 400px; }
     .login-box button { width: 100%; background-color: #1abc9c; margin-top: 10px; }
   </style>
@@ -116,7 +122,7 @@
     {% endif %}
   </nav>
 
-  <h1>🎹 Drum & Piano Studio</h1>
+  <h1>🎹 Full Band Studio</h1>
 
   <div class="machine-wrapper">
     <div class="controls">
@@ -145,14 +151,20 @@
         </div>
 
         <div class="control-group" style="border: 1px solid #f39c12;">
-            <label style="color: #f39c12;">Copy Bar:</label>
+            <label style="color: #f39c12;">Copy:</label>
+            <select id="copy-track-select" style="width: 100px;">
+                <option value="all">All Tracks</option>
+            </select>
+            <label style="color: #f39c12;">|</label>
             <input type="number" id="copy-src" value="1" min="1" max="8" style="width: 35px;">
             <label style="color: #f39c12;">→</label>
             <input type="number" id="copy-dest" value="2" min="1" max="8" style="width: 35px;">
             <button class="btn-copy" onclick="copyMeasures()">Go</button>
         </div>
         
-        <div style="width: 100%; height: 10px;"></div> <button id="btn-play" class="btn-play" onclick="playBeats()">▶ Play</button>
+        <div style="width: 100%; height: 10px;"></div> 
+
+        <button id="btn-play" class="btn-play" onclick="playBeats()">▶ Play</button>
         <button class="btn-stop" onclick="clearAll()">🗑 Clear All</button>
         <button class="btn-save" onclick="saveToCloud()">💾 Save Cloud</button>
         <button class="btn-json" onclick="downloadJson()">⬇ JSON</button>
@@ -167,18 +179,27 @@
   <script>
     // --- 1. SETTINGS & STATE ---
     let songData = []; 
-    const trackIds = ['track-0', 'track-1', 'track-2', 'track-3', 'track-4', 'track-5', 'track-6', 'track-7'];
+    // 20 Tracks Total
+    const trackIds = [
+        'track-0', 'track-1', 'track-2', 'track-3', // Drums
+        'track-4', 'track-5', 'track-6', 'track-7', // Bass
+        'track-8', 'track-9', 'track-10', 'track-11', // Piano
+        'track-12', 'track-13', 'track-14', 'track-15', // Game FX
+        'track-16', 'track-17', 'track-18', 'track-19'  // Animals (Now 4 rows)
+    ];
     
-    // Default assignments
+    // UPDATED ASSIGNMENTS
     let trackAssignments = {
-        'track-0': 'kick',
-        'track-1': 'snare',
-        'track-2': 'hihat',
-        'track-3': 'tom1',
-        'track-4': 'piano-C4', 
-        'track-5': 'piano-E4', 
-        'track-6': 'piano-G4', 
-        'track-7': 'piano-B4'  
+        'track-0': 'kick', 'track-1': 'snare', 'track-2': 'hihat', 'track-3': 'tom1',
+        'track-4': 'bass-C2', 'track-5': 'bass-E2', 'track-6': 'bass-G2', 'track-7': 'bass-B2',
+        'track-8': 'piano-C4', 'track-9': 'piano-E4', 'track-10': 'piano-G4', 'track-11': 'piano-B4',
+        'track-12': 'fx-C5', 'track-13': 'fx-E5', 'track-14': 'fx-G5', 'track-15': 'fx-C6',
+        
+        // NEW: Specific Assignments for your 4 sounds
+        'track-16': 'cat_meow', 
+        'track-17': 'cow', 
+        'track-18': 'cricket', 
+        'track-19': 'horse'
     };
 
     const gridDiv = document.getElementById('grid-container');
@@ -186,7 +207,12 @@
     const recorder = new Tone.Recorder();
 
     // --- 2. AUDIO ENGINE ---
+    
+    // UPDATED: Added your specific WAV files
+    // Ensure your files in /static/sounds/ are named exactly:
+    // cat_meow.wav, cow.wav, cricket.wav, horse.wav
     const drumPlayers = new Tone.Players({
+        // Standard Kit
         "kick": "https://tonejs.github.io/audio/drum-samples/CR78/kick.mp3",
         "snare": "https://tonejs.github.io/audio/drum-samples/CR78/snare.mp3",
         "hihat": "https://tonejs.github.io/audio/drum-samples/CR78/hihat.mp3",
@@ -194,30 +220,75 @@
         "tom1": "https://tonejs.github.io/audio/drum-samples/CR78/tom1.mp3", 
         "tom2": "https://tonejs.github.io/audio/drum-samples/CR78/tom2.mp3", 
         "tom3": "https://tonejs.github.io/audio/drum-samples/CR78/tom3.mp3", 
-        "rim": "https://tonejs.github.io/audio/drum-samples/CR78/rimshot.mp3" 
-    }).toDestination();
+        "bongo": "https://tonejs.github.io/audio/drum-samples/CR78/bongo1.mp3",
 
+        // BARNYARD KIT (Local .wav Files)
+        "cat_meow": "/static/player/sounds/cat_meow.wav",
+        "cow": "/static/player/sounds/cow.wav",
+        "cricket": "/static/player/sounds/cricket.wav",
+        "horse": "/static/player/sounds/horse.wav"
+    }).toDestination();
+    
+    // PIANO
     const pianoSampler = new Tone.Sampler({
         urls: { "C4": "C4.mp3", "D#4": "Ds4.mp3", "F#4": "Fs4.mp3", "A4": "A4.mp3" },
         release: 1,
         baseUrl: "https://tonejs.github.io/audio/salamander/"
     }).toDestination();
 
+    // BASS SYNTH
+    const bassSynth = new Tone.PolySynth(Tone.Synth, {
+        oscillator: { type: "sawtooth" },
+        envelope: { attack: 0.01, decay: 0.1, sustain: 0.3, release: 1 }
+    }).toDestination();
+    bassSynth.volume.value = -5;
+
+    // GAME FX
+    const fxSynth = new Tone.PolySynth(Tone.Synth, {
+        oscillator: { type: "square" }, 
+        envelope: { attack: 0.01, decay: 0.1, sustain: 0.1, release: 0.5 }
+    }).toDestination();
+    fxSynth.volume.value = -8;
+
     drumPlayers.connect(recorder);
     pianoSampler.connect(recorder);
+    bassSynth.connect(recorder);
+    fxSynth.connect(recorder);
 
     const soundGroups = {
-        "Drums (CR78)": ["kick", "snare", "hihat", "clap"],
-        "Toms & Perc": ["tom1", "tom2", "tom3", "rim"],
-        "Piano": ["piano-C4", "piano-D4", "piano-E4", "piano-F4", "piano-G4", "piano-A4", "piano-B4", "piano-C5"]
+        "Drums (CR78)": ["kick", "snare", "hihat", "clap", "tom1", "tom2", "tom3", "bongo"],
+        "Bass Synth": ["bass-C2", "bass-D2", "bass-E2", "bass-G2", "bass-A2", "bass-B2"],
+        "Piano": ["piano-C4", "piano-D4", "piano-E4", "piano-G4", "piano-A4", "piano-B4", "piano-C5"],
+        "8-Bit FX": ["fx-C5", "fx-E5", "fx-G5", "fx-C6", "fx-E6"],
+        "Barnyard (Local)": ["cat_meow", "cow", "cricket", "horse"] // Updated Group
     };
 
     // --- 3. GRID BUILDER ---
     function buildGrid() {
         gridDiv.innerHTML = ''; 
+        
+        const copySelect = document.getElementById('copy-track-select');
+        copySelect.innerHTML = '<option value="all">All Tracks</option>';
+        
+        trackIds.forEach((trackId, index) => {
+            const currentSound = trackAssignments[trackId];
+            let name = currentSound
+                .replace('piano-', 'Pno ')
+                .replace('bass-', 'Bass ')
+                .replace('fx-', '8-Bit ')
+                .replace('tom', 'Tom ')
+                .replace('cat_meow', 'Cat')
+                .replace('_', ' ');
+            name = name.charAt(0).toUpperCase() + name.slice(1);
+            
+            const opt = document.createElement('option');
+            opt.value = trackId;
+            opt.innerText = `Row ${index + 1}: ${name}`;
+            copySelect.appendChild(opt);
+        });
+
         const speed = document.getElementById('speed-select').value;      
         const measures = document.getElementById('measures-select').value; 
-        
         const totalDuration = Tone.Time(measures).toSeconds();
         const stepDuration = Tone.Time(speed).toSeconds();
         const totalCols = Math.round(totalDuration / stepDuration);
@@ -227,7 +298,15 @@
 
         trackIds.forEach((trackId) => {
             const label = document.createElement('div');
-            label.className = 'row-label';
+            
+            // Logic to color the new rows
+            const soundName = trackAssignments[trackId];
+            if (soundName.startsWith('piano')) label.className = 'row-label piano';
+            else if (soundName.startsWith('bass')) label.className = 'row-label bass';
+            else if (soundName.startsWith('fx')) label.className = 'row-label fx';
+            else if (soundGroups["Barnyard (Local)"].includes(soundName)) label.className = 'row-label animal';
+            else label.className = 'row-label drums';
+
             const select = document.createElement('select');
             select.className = 'sound-select';
             
@@ -237,7 +316,14 @@
                 sounds.forEach(sound => {
                     const opt = document.createElement('option');
                     opt.value = sound;
-                    let displayName = sound.replace('piano-', 'Key ').replace('tom', 'Tom ').replace('rim', 'Rimshot');
+                    let displayName = sound
+                        .replace('piano-', 'Pno ')
+                        .replace('bass-', 'Bass ')
+                        .replace('fx-', '8-Bit ')
+                        .replace('tom', 'Tom ')
+                        .replace('bongo', 'Bongo')
+                        .replace('cat_meow', 'Cat Meow')
+                        .replace('_', ' ');
                     displayName = displayName.charAt(0).toUpperCase() + displayName.slice(1);
                     opt.innerText = displayName;
                     if(trackAssignments[trackId] === sound) opt.selected = true;
@@ -249,6 +335,7 @@
             select.onchange = (e) => {
                 trackAssignments[trackId] = e.target.value;
                 playPreview(e.target.value); 
+                buildGrid(); 
             };
             label.appendChild(select);
             gridDiv.appendChild(label);
@@ -257,9 +344,7 @@
                 const box = document.createElement('div');
                 box.className = 'beat-box';
                 box.dataset.track = trackId; 
-                // Grid lines for bars
                 if (i > 0 && i % stepsPerMeasure === 0) { box.style.borderLeft = "2px solid #666"; }
-                // Fainter lines for beats
                 else if (i > 0 && i % (stepsPerMeasure/4) === 0) { box.style.borderLeft = "1px solid #444"; }
                 
                 const time = i * stepDuration;
@@ -276,31 +361,29 @@
         });
     }
 
-    // --- 4. NEW COPY FUNCTION ---
+    // --- 4. COPY FUNCTION ---
     function copyMeasures() {
         const srcBar = parseInt(document.getElementById('copy-src').value);
         const destBar = parseInt(document.getElementById('copy-dest').value);
-        
+        const selectedTrack = document.getElementById('copy-track-select').value;
+
         if(srcBar === destBar) return alert("Source and Destination cannot be the same!");
         
-        // Calculate Time Window
         const barDuration = Tone.Time("1m").toSeconds();
         const startTime = (srcBar - 1) * barDuration;
         const endTime = srcBar * barDuration;
-        
-        // Calculate Offset (How much to shift the notes)
         const timeOffset = (destBar - srcBar) * barDuration;
         
-        // Find notes in the Source Bar
-        const notesToCopy = songData.filter(n => n.time >= startTime - 0.001 && n.time < endTime - 0.001);
+        const notesToCopy = songData.filter(n => {
+            const inTimeWindow = n.time >= startTime - 0.001 && n.time < endTime - 0.001;
+            const correctTrack = (selectedTrack === 'all') || (n.track === selectedTrack);
+            return inTimeWindow && correctTrack;
+        });
         
-        if(notesToCopy.length === 0) return alert(`Bar ${srcBar} is empty!`);
+        if(notesToCopy.length === 0) return alert(`No notes found in Bar ${srcBar}.`);
         
-        // Add copies to songData
         notesToCopy.forEach(note => {
             const newTime = note.time + timeOffset;
-            
-            // Check if note already exists at destination (prevent duplicates)
             const exists = songData.find(n => n.track === note.track && Math.abs(n.time - newTime) < 0.001);
             if(!exists) {
                 songData.push({
@@ -310,9 +393,7 @@
                 });
             }
         });
-        
-        alert(`Copied ${notesToCopy.length} notes from Bar ${srcBar} to Bar ${destBar}.`);
-        buildGrid(); // Refresh grid to show new notes
+        buildGrid(); 
     }
 
     // --- 5. LOGIC & PLAYBACK ---
@@ -320,6 +401,12 @@
         if (soundName.startsWith('piano-')) {
              const note = soundName.replace('piano-', '');
              pianoSampler.triggerAttackRelease(note, "8n");
+        } else if (soundName.startsWith('bass-')) {
+             const note = soundName.replace('bass-', '');
+             bassSynth.triggerAttackRelease(note, "8n");
+        } else if (soundName.startsWith('fx-')) {
+             const note = soundName.replace('fx-', '');
+             fxSynth.triggerAttackRelease(note, "16n");
         } else {
              if (drumPlayers.loaded && drumPlayers.has(soundName)) {
                  drumPlayers.player(soundName).start();
@@ -374,6 +461,12 @@
                     if (soundName.startsWith('piano-')) {
                         const noteName = soundName.replace('piano-', '');
                         pianoSampler.triggerAttackRelease(noteName, speed, time, velocity);
+                    } else if (soundName.startsWith('bass-')) {
+                        const noteName = soundName.replace('bass-', '');
+                        bassSynth.triggerAttackRelease(noteName, speed, time, velocity);
+                    } else if (soundName.startsWith('fx-')) {
+                        const noteName = soundName.replace('fx-', '');
+                        fxSynth.triggerAttackRelease(noteName, "16n", time, velocity);
                     } else {
                         if(drumPlayers.has(soundName)){
                             const player = drumPlayers.player(soundName);
@@ -401,11 +494,7 @@
 
     function saveToCloud() {
         const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
-        const payload = {
-            title: "My Composition",
-            notes: songData, 
-            settings: trackAssignments 
-        };
+        const payload = { title: "My Composition", notes: songData, settings: trackAssignments };
 
         fetch('/save-composition/', {
             method: 'POST',
@@ -439,6 +528,13 @@
         if (!drumPlayers.loaded) await Tone.loaded();
         
         updateTempo();
+        const recorder = new Tone.Recorder({ mimeType: "audio/webm" });
+        
+        drumPlayers.connect(recorder);
+        pianoSampler.connect(recorder);
+        bassSynth.connect(recorder);
+        fxSynth.connect(recorder);
+        
         recorder.start();
         
         const measures = document.getElementById('measures-select').value;
@@ -453,6 +549,10 @@
 
              if (soundName.startsWith('piano-')) {
                  pianoSampler.triggerAttackRelease(soundName.replace('piano-', ''), speed, time, velocity);
+             } else if (soundName.startsWith('bass-')) {
+                 bassSynth.triggerAttackRelease(soundName.replace('bass-', ''), speed, time, velocity);
+             } else if (soundName.startsWith('fx-')) {
+                 fxSynth.triggerAttackRelease(soundName.replace('fx-', ''), "16n", time, velocity);
              } else {
                  if(drumPlayers.has(soundName)){
                      const player = drumPlayers.player(soundName);
