@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Full Band Studio + Animals</title>
+  <title>Dynamic Studio + Uploads</title>
   
   <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/lamejs@1.2.1/lame.min.js"></script>
@@ -28,11 +28,7 @@
     nav a { color: #ecf0f1; text-decoration: none; margin: 0 15px; font-weight: bold; font-size: 1.1rem; }
     nav a:hover { color: #1abc9c; }
 
-    .logout-btn {
-        background: none; border: none; color: #ecf0f1;
-        font-weight: bold; font-size: 1.1rem; cursor: pointer;
-        margin: 0 15px; text-decoration: none;
-    }
+    .logout-btn { background: none; border: none; color: #ecf0f1; font-weight: bold; font-size: 1.1rem; cursor: pointer; margin: 0 15px; text-decoration: none; }
 
     .machine-wrapper {
       background: #34495e; padding: 25px; border-radius: 12px;
@@ -40,54 +36,54 @@
       text-align: center; max-width: 1100px; width: 95%;
     }
 
-    /* --- GRID STYLES --- */
-    #grid-container {
-      display: grid; gap: 4px; background: #222;
-      padding: 12px; border-radius: 8px;
-      overflow-x: auto; 
-      margin-bottom: 20px;
-      border: 1px solid #444;
-      max-height: 65vh; 
-      overflow-y: auto;
+    /* UPLOAD FORM STYLE */
+    .upload-section {
+        background: #222; padding: 15px; border-radius: 8px; margin-bottom: 20px;
+        border: 1px dashed #666; display: flex; gap: 10px; align-items: center; justify-content: center;
     }
+
+    /* GRID LAYOUT */
+    #grid-container {
+      display: flex; flex-direction: column; gap: 5px; 
+      background: #222; padding: 12px; border-radius: 8px;
+      overflow-x: auto; margin-bottom: 20px; border: 1px solid #444;
+      max-height: 65vh; overflow-y: auto;
+    }
+
+    .track-row { display: flex; align-items: center; min-width: max-content; gap: 4px; }
 
     .row-label { 
       background: #16a085; color: white;
       display: flex; align-items: center; justify-content: center; 
       border-radius: 4px; font-size: 0.8rem;
-      position: sticky; left: 0; z-index: 10;
-      padding: 0 5px; min-width: 160px; 
+      position: sticky; left: 0; z-index: 10; 
+      padding: 0 5px; width: 160px; min-width: 160px; height: 35px;
       box-shadow: 2px 0 5px rgba(0,0,0,0.5);
     }
 
-    /* COLOR CODING SECTIONS */
-    .row-label.drums { background: #16a085; } /* Teal */
-    .row-label.bass  { background: #8e44ad; } /* Purple */
-    .row-label.piano { background: #27ae60; } /* Green */
-    .row-label.fx    { background: #e67e22; } /* Orange */
-    .row-label.animal{ background: #c0392b; } /* Red/Brown */
+    /* COLORS */
+    .row-label.drums { background: #16a085; } 
+    .row-label.bass  { background: #8e44ad; } 
+    .row-label.piano { background: #27ae60; } 
+    .row-label.fx    { background: #e67e22; } 
+    .row-label.animal{ background: #c0392b; }
+    .row-label.custom{ background: #2980b9; } /* Blue for User Uploads */
 
-    .sound-select {
-        background: rgba(0,0,0,0.2); color: #fff;
-        border: none; border-radius: 3px;
-        font-size: 0.8rem; width: 100%;
-        padding: 6px; cursor: pointer; font-weight: bold;
-    }
+    .sound-select { background: rgba(0,0,0,0.2); color: #fff; border: none; border-radius: 3px; font-size: 0.8rem; width: 100%; padding: 6px; cursor: pointer; font-weight: bold; }
     option { background: #2c3e50; }
 
     .beat-box { 
-        background: #95a5a6; height: 35px; min-width: 35px; 
-        border-radius: 3px; cursor: pointer; 
-        transition: all 0.1s;
+        background: #95a5a6; height: 35px; width: 35px; 
+        border-radius: 3px; cursor: pointer; transition: all 0.1s; flex-shrink: 0; 
     }
     .beat-box.normal { background-color: #3498db; }
     .beat-box.accent { background-color: #e74c3c; box-shadow: inset 0 0 0 3px #fff; }
     .beat-box:hover { opacity: 0.8; transform: scale(0.95); }
 
     .controls { 
-        margin-top: 20px; padding: 20px; 
-        background: #2c3e50; border-radius: 8px; 
-        display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 15px;
+        margin-top: 20px; padding: 20px; background: #2c3e50; border-radius: 8px; 
+        display: flex; flex-direction: row; flex-wrap: wrap; 
+        justify-content: center; align-items: center; gap: 15px;
     }
     
     button { padding: 10px 18px; cursor: pointer; border: none; border-radius: 6px; color: white; font-size: 0.9rem; font-weight: bold; transition: transform 0.1s;}
@@ -95,16 +91,12 @@
     
     .btn-play { background-color: #27ae60; min-width: 100px; font-size: 1rem; }
     .btn-stop { background-color: #c0392b; }
-    .btn-save { background-color: #2980b9; } 
-    .btn-json { background-color: #8e44ad; } 
-    .btn-audio { background-color: #d35400; }
-    .btn-copy { background-color: #f39c12; color: #2c3e50; } 
-    
+    .btn-save { background-color: #2980b9; } .btn-json { background-color: #8e44ad; } .btn-audio { background-color: #d35400; } .btn-copy { background-color: #f39c12; color: #2c3e50; } 
+    .btn-size { background-color: #7f8c8d; padding: 8px 12px; }
+
     label { font-size: 0.9rem; color: #bdc3c7; font-weight: bold; }
     select, input { background: #ecf0f1; border: none; padding: 8px; border-radius: 4px; font-size: 0.9rem; color: #333; }
-    .control-group { display: flex; align-items: center; gap: 5px; background: #222; padding: 5px 10px; border-radius: 5px; }
-    .login-box { margin-top: 50px; padding: 20px; border-top: 1px solid #555; width: 100%; max-width: 400px; }
-    .login-box button { width: 100%; background-color: #1abc9c; margin-top: 10px; }
+    .control-group { display: flex; flex-direction: row; align-items: center; gap: 5px; background: #222; padding: 5px 10px; border-radius: 5px; }
   </style>
 </head>
 <body>
@@ -113,62 +105,40 @@
     <a href="/">Home</a>
     {% if user.is_authenticated %}
         <a href="{% url 'forum' %}">Forum</a>
-        <form action="{% url 'logout' %}" method="post" style="display:inline;">
-            {% csrf_token %}
-            <button type="submit" class="logout-btn">Logout</button>
-        </form>
+        <form action="{% url 'logout' %}" method="post" style="display:inline;">{% csrf_token %}<button type="submit" class="logout-btn">Logout</button></form>
     {% else %}
         <a href="{% url 'login_page' %}">Login</a>
     {% endif %}
   </nav>
 
-  <h1>🎹 Full Band Studio</h1>
+  <h1>🎹 Dynamic Studio</h1>
 
   <div class="machine-wrapper">
+    
+    {% if user.is_authenticated %}
+    <div class="upload-section">
+        <form method="post" enctype="multipart/form-data" style="display:flex; gap:10px; align-items:center;">
+            {% csrf_token %}
+            <label>Upload MP3/WAV:</label>
+            <input type="text" name="sound_name" placeholder="Name (e.g. My Kick)" required style="width:150px;">
+            <input type="file" name="custom_sound" accept=".mp3, .wav" required>
+            <button type="submit" style="background:#2980b9;">Upload</button>
+        </form>
+    </div>
+    {% endif %}
+
     <div class="controls">
-        <div class="control-group">
-            <label>BPM:</label>
-            <input type="number" id="bpm-input" value="120" min="40" max="300" onchange="updateTempo()">
-        </div>
-        <div class="control-group">
-            <label>Measures:</label>
-            <select id="measures-select" onchange="buildGrid()">
-                <option value="1m">1 Bar</option>
-                <option value="2m" selected>2 Bars</option>
-                <option value="4m">4 Bars</option>
-                <option value="8m">8 Bars</option>
-            </select>
-        </div>
-        <div class="control-group">
-            <label>Subdivision:</label>
-            <select id="speed-select" onchange="buildGrid()">
-                <option value="4n">Quarter (1/4)</option>
-                <option value="8n" selected>Eighth (1/8)</option>
-                <option value="8t">Triplets (1/8T)</option>
-                <option value="16n">Sixteenth (1/16)</option>
-                <option value="32n">32nd (1/32)</option>
-            </select>
-        </div>
-
-        <div class="control-group" style="border: 1px solid #f39c12;">
-            <label style="color: #f39c12;">Copy:</label>
-            <select id="copy-track-select" style="width: 100px;">
-                <option value="all">All Tracks</option>
-            </select>
-            <label style="color: #f39c12;">|</label>
-            <input type="number" id="copy-src" value="1" min="1" max="8" style="width: 35px;">
-            <label style="color: #f39c12;">→</label>
-            <input type="number" id="copy-dest" value="2" min="1" max="8" style="width: 35px;">
-            <button class="btn-copy" onclick="copyMeasures()">Go</button>
-        </div>
+        <div class="control-group"><label>BPM:</label><input type="number" id="bpm-input" value="120" min="40" max="300" onchange="updateTempo()" style="width: 50px;"></div>
+        <div class="control-group" style="border: 1px solid #16a085;"><button class="btn-size" onclick="removeTrack()">-</button><label id="track-display">4 Tracks</label><button class="btn-size" onclick="addTrack()">+</button></div>
+        <div class="control-group"><button class="btn-size" onclick="removeBar()">-</button><label id="measure-display">4 Bars</label><button class="btn-size" onclick="addBar()">+</button></div>
+        <div class="control-group"><select id="speed-select" onchange="buildGrid()"><option value="4n">1/4</option><option value="8n" selected>1/8</option><option value="16n">1/16</option></select></div>
+        <div class="control-group" style="border: 1px solid #f39c12;"><label style="color: #f39c12;">Copy:</label><select id="copy-track-select" style="width: 80px;"><option value="all">All</option></select><input type="number" id="copy-src" value="1" min="1" max="8" style="width: 35px;"><label style="color: #f39c12;">→</label><input type="number" id="copy-dest" value="2" min="1" max="8" style="width: 35px;"><button class="btn-copy" onclick="copyMeasures()">Go</button></div>
         
-        <div style="width: 100%; height: 10px;"></div> 
-
         <button id="btn-play" class="btn-play" onclick="playBeats()">▶ Play</button>
-        <button class="btn-stop" onclick="clearAll()">🗑 Clear All</button>
-        <button class="btn-save" onclick="saveToCloud()">💾 Save Cloud</button>
+        <button class="btn-stop" onclick="clearAll()">🗑</button>
+        <button class="btn-save" onclick="saveToCloud()">💾</button>
         <button class="btn-json" onclick="downloadJson()">⬇ JSON</button>
-        <button class="btn-audio" onclick="exportAudio()">🎵 Export Audio</button>
+        <button class="btn-audio" onclick="exportAudio()">🎵 Export</button>
     </div>
 
     <div id="grid-container"></div>
@@ -178,41 +148,39 @@
 
   <script>
     // --- 1. SETTINGS & STATE ---
+    let measureCount = 4;
+    let visibleTrackCount = 4;
     let songData = []; 
-    // 20 Tracks Total
-    const trackIds = [
-        'track-0', 'track-1', 'track-2', 'track-3', // Drums
-        'track-4', 'track-5', 'track-6', 'track-7', // Bass
-        'track-8', 'track-9', 'track-10', 'track-11', // Piano
-        'track-12', 'track-13', 'track-14', 'track-15', // Game FX
-        'track-16', 'track-17', 'track-18', 'track-19'  // Animals (Now 4 rows)
-    ];
-    
-    // UPDATED ASSIGNMENTS
+    // Create plenty of IDs
+    const trackIds = Array.from({length: 30}, (_, i) => `track-${i}`);
+
+    // --- 2. INJECT USER SOUNDS FROM DJANGO ---
+    // This loops through the database results and creates a JS object
+    const userCustomSounds = {
+        {% for sound in user_sounds %}
+        "custom_{{ sound.id }}": {
+            name: "{{ sound.name }}",
+            url: "{{ sound.audio_file.url }}"
+        },
+        {% endfor %}
+    };
+
     let trackAssignments = {
         'track-0': 'kick', 'track-1': 'snare', 'track-2': 'hihat', 'track-3': 'tom1',
         'track-4': 'bass-C2', 'track-5': 'bass-E2', 'track-6': 'bass-G2', 'track-7': 'bass-B2',
-        'track-8': 'piano-C4', 'track-9': 'piano-E4', 'track-10': 'piano-G4', 'track-11': 'piano-B4',
-        'track-12': 'fx-C5', 'track-13': 'fx-E5', 'track-14': 'fx-G5', 'track-15': 'fx-C6',
-        
-        // NEW: Specific Assignments for your 4 sounds
-        'track-16': 'cat_meow', 
-        'track-17': 'cow', 
-        'track-18': 'cricket', 
-        'track-19': 'horse'
+        // Others will default to kick if not set
     };
+    // Ensure defaults
+    trackIds.forEach(id => { if(!trackAssignments[id]) trackAssignments[id] = 'kick'; });
 
     const gridDiv = document.getElementById('grid-container');
     let isPlaying = false; 
     const recorder = new Tone.Recorder();
 
-    // --- 2. AUDIO ENGINE ---
+    // --- 3. AUDIO ENGINE ---
     
-    // UPDATED: Added your specific WAV files
-    // Ensure your files in /static/sounds/ are named exactly:
-    // cat_meow.wav, cow.wav, cricket.wav, horse.wav
-    const drumPlayers = new Tone.Players({
-        // Standard Kit
+    // A. Base URLs
+    const baseUrls = {
         "kick": "https://tonejs.github.io/audio/drum-samples/CR78/kick.mp3",
         "snare": "https://tonejs.github.io/audio/drum-samples/CR78/snare.mp3",
         "hihat": "https://tonejs.github.io/audio/drum-samples/CR78/hihat.mp3",
@@ -221,110 +189,94 @@
         "tom2": "https://tonejs.github.io/audio/drum-samples/CR78/tom2.mp3", 
         "tom3": "https://tonejs.github.io/audio/drum-samples/CR78/tom3.mp3", 
         "bongo": "https://tonejs.github.io/audio/drum-samples/CR78/bongo1.mp3",
-
-        // BARNYARD KIT (Local .wav Files)
         "cat_meow": "/static/player/sounds/cat_meow.wav",
         "cow": "/static/player/sounds/cow.wav",
         "cricket": "/static/player/sounds/cricket.wav",
         "horse": "/static/player/sounds/horse.wav"
-    }).toDestination();
+    };
+
+    // B. Merge Base + Custom for Player
+    let playerUrls = { ...baseUrls };
+    for (const [key, data] of Object.entries(userCustomSounds)) {
+        playerUrls[key] = data.url;
+    }
+
+    // Initialize Tone Players with the merged list
+    const drumPlayers = new Tone.Players(playerUrls).toDestination();
     
-    // PIANO
-    const pianoSampler = new Tone.Sampler({
-        urls: { "C4": "C4.mp3", "D#4": "Ds4.mp3", "F#4": "Fs4.mp3", "A4": "A4.mp3" },
-        release: 1,
-        baseUrl: "https://tonejs.github.io/audio/salamander/"
-    }).toDestination();
-
-    // BASS SYNTH
-    const bassSynth = new Tone.PolySynth(Tone.Synth, {
-        oscillator: { type: "sawtooth" },
-        envelope: { attack: 0.01, decay: 0.1, sustain: 0.3, release: 1 }
-    }).toDestination();
+    // Synths
+    const pianoSampler = new Tone.Sampler({ urls: { "C4": "C4.mp3", "D#4": "Ds4.mp3", "F#4": "Fs4.mp3", "A4": "A4.mp3" }, release: 1, baseUrl: "https://tonejs.github.io/audio/salamander/" }).toDestination();
+    const bassSynth = new Tone.PolySynth(Tone.Synth, { oscillator: { type: "sawtooth" }, envelope: { attack: 0.01, decay: 0.1, sustain: 0.3, release: 1 } }).toDestination();
     bassSynth.volume.value = -5;
-
-    // GAME FX
-    const fxSynth = new Tone.PolySynth(Tone.Synth, {
-        oscillator: { type: "square" }, 
-        envelope: { attack: 0.01, decay: 0.1, sustain: 0.1, release: 0.5 }
-    }).toDestination();
+    const fxSynth = new Tone.PolySynth(Tone.Synth, { oscillator: { type: "square" }, envelope: { attack: 0.01, decay: 0.1, sustain: 0.1, release: 0.5 } }).toDestination();
     fxSynth.volume.value = -8;
 
-    drumPlayers.connect(recorder);
-    pianoSampler.connect(recorder);
-    bassSynth.connect(recorder);
-    fxSynth.connect(recorder);
+    drumPlayers.connect(recorder); pianoSampler.connect(recorder); bassSynth.connect(recorder); fxSynth.connect(recorder);
 
-    const soundGroups = {
-        "Drums (CR78)": ["kick", "snare", "hihat", "clap", "tom1", "tom2", "tom3", "bongo"],
+    // --- 4. DYNAMIC GROUPS ---
+    let soundGroups = {
+        "Drums": ["kick", "snare", "hihat", "clap", "tom1", "tom2", "tom3", "bongo"],
         "Bass Synth": ["bass-C2", "bass-D2", "bass-E2", "bass-G2", "bass-A2", "bass-B2"],
         "Piano": ["piano-C4", "piano-D4", "piano-E4", "piano-G4", "piano-A4", "piano-B4", "piano-C5"],
         "8-Bit FX": ["fx-C5", "fx-E5", "fx-G5", "fx-C6", "fx-E6"],
-        "Barnyard (Local)": ["cat_meow", "cow", "cricket", "horse"] // Updated Group
+        "Barnyard": ["cat_meow", "cow", "cricket", "horse"],
+        "My Uploads": [] // Will be filled dynamically
     };
 
-    // --- 3. GRID BUILDER ---
+    // Add keys to "My Uploads"
+    for (const key of Object.keys(userCustomSounds)) {
+        soundGroups["My Uploads"].push(key);
+    }
+
+    // --- 5. CONTROLS ---
+    function addBar() { measureCount++; buildGrid(); }
+    function removeBar() { if (measureCount > 1) { measureCount--; buildGrid(); } }
+    function addTrack() { if (visibleTrackCount < trackIds.length) { visibleTrackCount++; buildGrid(); } }
+    function removeTrack() { if (visibleTrackCount > 1) { visibleTrackCount--; buildGrid(); } }
+
+    // --- 6. GRID BUILDER ---
     function buildGrid() {
+        document.getElementById('measure-display').innerText = measureCount + (measureCount === 1 ? " Bar" : " Bars");
+        document.getElementById('track-display').innerText = visibleTrackCount + " Tracks";
+        document.getElementById('copy-src').max = measureCount; document.getElementById('copy-dest').max = measureCount;
+
         gridDiv.innerHTML = ''; 
+        const copySelect = document.getElementById('copy-track-select'); copySelect.innerHTML = '<option value="all">All</option>';
         
-        const copySelect = document.getElementById('copy-track-select');
-        copySelect.innerHTML = '<option value="all">All Tracks</option>';
-        
-        trackIds.forEach((trackId, index) => {
-            const currentSound = trackAssignments[trackId];
-            let name = currentSound
-                .replace('piano-', 'Pno ')
-                .replace('bass-', 'Bass ')
-                .replace('fx-', '8-Bit ')
-                .replace('tom', 'Tom ')
-                .replace('cat_meow', 'Cat')
-                .replace('_', ' ');
-            name = name.charAt(0).toUpperCase() + name.slice(1);
+        for(let i = 0; i < visibleTrackCount; i++) {
+            const trackId = trackIds[i];
             
-            const opt = document.createElement('option');
-            opt.value = trackId;
-            opt.innerText = `Row ${index + 1}: ${name}`;
-            copySelect.appendChild(opt);
-        });
-
-        const speed = document.getElementById('speed-select').value;      
-        const measures = document.getElementById('measures-select').value; 
-        const totalDuration = Tone.Time(measures).toSeconds();
-        const stepDuration = Tone.Time(speed).toSeconds();
-        const totalCols = Math.round(totalDuration / stepDuration);
-        
-        gridDiv.style.gridTemplateColumns = `160px repeat(${totalCols}, 1fr)`; 
-        const stepsPerMeasure = Math.round(Tone.Time("1m").toSeconds() / stepDuration);
-
-        trackIds.forEach((trackId) => {
-            const label = document.createElement('div');
-            
-            // Logic to color the new rows
+            // Build Row
+            const row = document.createElement('div'); row.className = 'track-row';
+            const label = document.createElement('div'); 
             const soundName = trackAssignments[trackId];
+            
+            // Color Logic
             if (soundName.startsWith('piano')) label.className = 'row-label piano';
             else if (soundName.startsWith('bass')) label.className = 'row-label bass';
             else if (soundName.startsWith('fx')) label.className = 'row-label fx';
-            else if (soundGroups["Barnyard (Local)"].includes(soundName)) label.className = 'row-label animal';
+            else if (soundGroups["Barnyard"].includes(soundName)) label.className = 'row-label animal';
+            else if (soundName.startsWith('custom_')) label.className = 'row-label custom'; // New Custom Color
             else label.className = 'row-label drums';
 
-            const select = document.createElement('select');
-            select.className = 'sound-select';
+            // Select Menu
+            const select = document.createElement('select'); select.className = 'sound-select';
             
             for (const [groupName, sounds] of Object.entries(soundGroups)) {
-                const group = document.createElement('optgroup');
-                group.label = groupName;
+                if(sounds.length === 0) continue; // Skip empty groups
+                const group = document.createElement('optgroup'); group.label = groupName;
                 sounds.forEach(sound => {
-                    const opt = document.createElement('option');
-                    opt.value = sound;
-                    let displayName = sound
-                        .replace('piano-', 'Pno ')
-                        .replace('bass-', 'Bass ')
-                        .replace('fx-', '8-Bit ')
-                        .replace('tom', 'Tom ')
-                        .replace('bongo', 'Bongo')
-                        .replace('cat_meow', 'Cat Meow')
-                        .replace('_', ' ');
-                    displayName = displayName.charAt(0).toUpperCase() + displayName.slice(1);
+                    const opt = document.createElement('option'); opt.value = sound;
+                    
+                    // Logic to display nice names
+                    let displayName = sound;
+                    if (userCustomSounds[sound]) {
+                        displayName = userCustomSounds[sound].name; // Use Real Name from DB
+                    } else {
+                        displayName = sound.replace('piano-', 'Pno ').replace('bass-', 'Bass ').replace('fx-', '8-Bit ').replace('tom', 'Tom ').replace('cat_meow', 'Cat').replace('_', ' ');
+                        displayName = displayName.charAt(0).toUpperCase() + displayName.slice(1);
+                    }
+                    
                     opt.innerText = displayName;
                     if(trackAssignments[trackId] === sound) opt.selected = true;
                     group.appendChild(opt);
@@ -335,40 +287,54 @@
             select.onchange = (e) => {
                 trackAssignments[trackId] = e.target.value;
                 playPreview(e.target.value); 
-                buildGrid(); 
+                // Re-apply color class logic
+                const newSound = e.target.value;
+                if (newSound.startsWith('piano')) label.className = 'row-label piano';
+                else if (newSound.startsWith('bass')) label.className = 'row-label bass';
+                else if (newSound.startsWith('fx')) label.className = 'row-label fx';
+                else if (soundGroups["Barnyard"].includes(newSound)) label.className = 'row-label animal';
+                else if (newSound.startsWith('custom_')) label.className = 'row-label custom';
+                else label.className = 'row-label drums';
             };
-            label.appendChild(select);
-            gridDiv.appendChild(label);
+            
+            // Add Copy Option
+            const opt = document.createElement('option');
+            opt.value = trackId; opt.innerText = `Row ${i + 1}`; copySelect.appendChild(opt);
 
-            for (let i = 0; i < totalCols; i++) {
-                const box = document.createElement('div');
-                box.className = 'beat-box';
+            label.appendChild(select); row.appendChild(label);
+
+            // Beats
+            const speed = document.getElementById('speed-select').value;      
+            const totalDuration = Tone.Time(measureCount + "m").toSeconds();
+            const stepDuration = Tone.Time(speed).toSeconds();
+            const totalCols = Math.round(totalDuration / stepDuration);
+            const stepsPerMeasure = Math.round(Tone.Time("1m").toSeconds() / stepDuration);
+
+            for (let c = 0; c < totalCols; c++) {
+                const box = document.createElement('div'); box.className = 'beat-box';
                 box.dataset.track = trackId; 
-                if (i > 0 && i % stepsPerMeasure === 0) { box.style.borderLeft = "2px solid #666"; }
-                else if (i > 0 && i % (stepsPerMeasure/4) === 0) { box.style.borderLeft = "1px solid #444"; }
+                if (c > 0 && c % stepsPerMeasure === 0) { box.style.borderLeft = "2px solid #666"; }
+                else if (c > 0 && c % (stepsPerMeasure/4) === 0) { box.style.borderLeft = "1px solid #444"; }
                 
-                const time = i * stepDuration;
-                box.dataset.time = time.toFixed(4);
+                const time = c * stepDuration; box.dataset.time = time.toFixed(4);
                 const existingNote = songData.find(note => note.track === trackId && Math.abs(note.time - time) < 0.001);
                 
-                if (existingNote) {
-                    if (existingNote.velocity > 0.8) { box.classList.add('accent'); } 
-                    else { box.classList.add('normal'); }
-                }
+                if (existingNote) { if (existingNote.velocity > 0.8) box.classList.add('accent'); else box.classList.add('normal'); }
                 box.onclick = function() { toggleBox(this); };
-                gridDiv.appendChild(box);
+                row.appendChild(box);
             }
-        });
+            gridDiv.appendChild(row);
+        }
     }
 
-    // --- 4. COPY FUNCTION ---
+    // --- 7. PLAYBACK LOGIC ---
     function copyMeasures() {
         const srcBar = parseInt(document.getElementById('copy-src').value);
         const destBar = parseInt(document.getElementById('copy-dest').value);
         const selectedTrack = document.getElementById('copy-track-select').value;
-
         if(srcBar === destBar) return alert("Source and Destination cannot be the same!");
-        
+        if(destBar > measureCount) return alert("Destination bar doesn't exist yet!");
+
         const barDuration = Tone.Time("1m").toSeconds();
         const startTime = (srcBar - 1) * barDuration;
         const endTime = srcBar * barDuration;
@@ -385,198 +351,92 @@
         notesToCopy.forEach(note => {
             const newTime = note.time + timeOffset;
             const exists = songData.find(n => n.track === note.track && Math.abs(n.time - newTime) < 0.001);
-            if(!exists) {
-                songData.push({
-                    track: note.track,
-                    time: newTime,
-                    velocity: note.velocity
-                });
-            }
+            if(!exists) { songData.push({ track: note.track, time: newTime, velocity: note.velocity }); }
         });
         buildGrid(); 
     }
 
-    // --- 5. LOGIC & PLAYBACK ---
     function playPreview(soundName) {
-        if (soundName.startsWith('piano-')) {
-             const note = soundName.replace('piano-', '');
-             pianoSampler.triggerAttackRelease(note, "8n");
-        } else if (soundName.startsWith('bass-')) {
-             const note = soundName.replace('bass-', '');
-             bassSynth.triggerAttackRelease(note, "8n");
-        } else if (soundName.startsWith('fx-')) {
-             const note = soundName.replace('fx-', '');
-             fxSynth.triggerAttackRelease(note, "16n");
-        } else {
-             if (drumPlayers.loaded && drumPlayers.has(soundName)) {
-                 drumPlayers.player(soundName).start();
-             }
-        }
+        if (soundName.startsWith('piano-')) pianoSampler.triggerAttackRelease(soundName.replace('piano-', ''), "8n");
+        else if (soundName.startsWith('bass-')) bassSynth.triggerAttackRelease(soundName.replace('bass-', ''), "8n");
+        else if (soundName.startsWith('fx-')) fxSynth.triggerAttackRelease(soundName.replace('fx-', ''), "16n");
+        else if (drumPlayers.loaded && drumPlayers.has(soundName)) drumPlayers.player(soundName).start();
     }
 
     function toggleBox(box) {
         const trackId = box.dataset.track;
         const time = parseFloat(box.dataset.time);
         const noteIndex = songData.findIndex(n => n.track === trackId && Math.abs(n.time - time) < 0.001);
-        const existingNote = songData[noteIndex];
         const currentSound = trackAssignments[trackId];
 
-        if (!existingNote) {
-            songData.push({ track: trackId, time: time, velocity: 0.6 });
-            box.className = 'beat-box normal';
-            playPreview(currentSound); 
-        } else if (existingNote.velocity < 0.8) {
-            existingNote.velocity = 1.0;
-            box.className = 'beat-box accent';
-            playPreview(currentSound); 
-        } else {
-            songData.splice(noteIndex, 1);
-            box.className = 'beat-box'; 
-        }
-        if(isPlaying) playBeats(); 
+        if (noteIndex === -1) { songData.push({ track: trackId, time: time, velocity: 0.6 }); box.className = 'beat-box normal'; playPreview(currentSound); } 
+        else if (songData[noteIndex].velocity < 0.8) { songData[noteIndex].velocity = 1.0; box.className = 'beat-box accent'; playPreview(currentSound); } 
+        else { songData.splice(noteIndex, 1); box.className = 'beat-box'; }
     }
 
     async function playBeats() {
-        await Tone.start();
-        if (!drumPlayers.loaded) await Tone.loaded();
-        
-        const btn = document.getElementById('btn-play');
-        const measures = document.getElementById('measures-select').value;
-        const speed = document.getElementById('speed-select').value;
-        
-        if (isPlaying) {
-            Tone.Transport.stop();
-            isPlaying = false;
-            btn.innerText = "▶ Play";
-            btn.style.backgroundColor = "#27ae60"; 
-        } else {
-            updateTempo(); 
-            Tone.Transport.cancel(); 
-
+        await Tone.start(); if (!drumPlayers.loaded) await Tone.loaded();
+        const btn = document.getElementById('btn-play'); const speed = document.getElementById('speed-select').value;
+        if (isPlaying) { Tone.Transport.stop(); isPlaying = false; btn.innerText = "▶ Play"; btn.style.backgroundColor = "#27ae60"; } 
+        else {
+            updateTempo(); Tone.Transport.cancel(); 
             songData.forEach(note => {
-                Tone.Transport.schedule((time) => {
-                    const soundName = trackAssignments[note.track]; 
-                    const velocity = (note.velocity > 0.8) ? 1 : 0.7; 
-
-                    if (soundName.startsWith('piano-')) {
-                        const noteName = soundName.replace('piano-', '');
-                        pianoSampler.triggerAttackRelease(noteName, speed, time, velocity);
-                    } else if (soundName.startsWith('bass-')) {
-                        const noteName = soundName.replace('bass-', '');
-                        bassSynth.triggerAttackRelease(noteName, speed, time, velocity);
-                    } else if (soundName.startsWith('fx-')) {
-                        const noteName = soundName.replace('fx-', '');
-                        fxSynth.triggerAttackRelease(noteName, "16n", time, velocity);
-                    } else {
-                        if(drumPlayers.has(soundName)){
-                            const player = drumPlayers.player(soundName);
-                            player.volume.value = (note.velocity > 0.8) ? 0 : -6;
-                            player.start(time);
-                        }
-                    }
-                }, note.time);
+                const trackIndex = trackIds.indexOf(note.track);
+                if (trackIndex !== -1 && trackIndex < visibleTrackCount) {
+                    Tone.Transport.schedule((time) => {
+                        const soundName = trackAssignments[note.track]; 
+                        const velocity = (note.velocity > 0.8) ? 1 : 0.7; 
+                        if (soundName.startsWith('piano-')) pianoSampler.triggerAttackRelease(soundName.replace('piano-', ''), speed, time, velocity);
+                        else if (soundName.startsWith('bass-')) bassSynth.triggerAttackRelease(soundName.replace('bass-', ''), speed, time, velocity);
+                        else if (soundName.startsWith('fx-')) fxSynth.triggerAttackRelease(soundName.replace('fx-', ''), "16n", time, velocity);
+                        else if(drumPlayers.has(soundName)) { const p = drumPlayers.player(soundName); p.volume.value = (note.velocity > 0.8) ? 0 : -6; p.start(time); }
+                    }, note.time);
+                }
             });
-
-            Tone.Transport.loop = true;
-            Tone.Transport.loopEnd = measures; 
-            Tone.Transport.start();
-            isPlaying = true;
-            btn.innerText = "⏸ Pause";
-            btn.style.backgroundColor = "#c0392b"; 
+            Tone.Transport.loop = true; Tone.Transport.loopEnd = measureCount + "m"; Tone.Transport.start(); isPlaying = true; btn.innerText = "⏸ Pause"; btn.style.backgroundColor = "#c0392b"; 
         }
     }
 
-    function clearAll() { 
-        if(isPlaying) playBeats(); 
-        songData = []; 
-        buildGrid(); 
-    }
-
+    function clearAll() { if(isPlaying) playBeats(); songData = []; buildGrid(); }
     function saveToCloud() {
         const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
         const payload = { title: "My Composition", notes: songData, settings: trackAssignments };
-
-        fetch('/save-composition/', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrfToken },
-            body: JSON.stringify(payload)
-        })
-        .then(res => res.json())
-        .then(data => {
-            if(data.status === 'success') alert('Saved! ID: ' + data.id);
-            else alert('Error: ' + data.message);
-        })
-        .catch(err => alert("Error connecting to server."));
+        fetch('/save-composition/', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrfToken }, body: JSON.stringify(payload) })
+        .then(res => res.json()).then(data => { if(data.status === 'success') alert('Saved! ID: ' + data.id); else alert('Error: ' + data.message); }).catch(err => alert("Error connecting to server."));
     }
-
     function downloadJson() {
-        const saveData = { tracks: trackAssignments, notes: songData };
-        const text = JSON.stringify(saveData, null, 2);
-        const blob = new Blob([text], { type: "application/json" });
-        const link = document.createElement('a');
-        link.href = URL.createObjectURL(blob);
-        link.download = "beat.json";
-        link.click();
+        const text = JSON.stringify({ tracks: trackAssignments, notes: songData }, null, 2);
+        const link = document.createElement('a'); link.href = URL.createObjectURL(new Blob([text], { type: "application/json" })); link.download = "beat.json"; link.click();
     }
-
     async function exportAudio() {
         if (songData.length === 0) return alert("Make a beat first!");
-        if(isPlaying) playBeats(); 
-        
-        alert("Recording... please wait until the loop finishes.");
-        await Tone.start();
-        if (!drumPlayers.loaded) await Tone.loaded();
-        
-        updateTempo();
-        const recorder = new Tone.Recorder({ mimeType: "audio/webm" });
-        
-        drumPlayers.connect(recorder);
-        pianoSampler.connect(recorder);
-        bassSynth.connect(recorder);
-        fxSynth.connect(recorder);
-        
+        if(isPlaying) playBeats(); alert("Recording..."); await Tone.start(); if (!drumPlayers.loaded) await Tone.loaded();
+        updateTempo(); const recorder = new Tone.Recorder({ mimeType: "audio/webm" });
+        drumPlayers.connect(recorder); pianoSampler.connect(recorder); bassSynth.connect(recorder); fxSynth.connect(recorder);
         recorder.start();
-        
-        const measures = document.getElementById('measures-select').value;
-        const speed = document.getElementById('speed-select').value;
-        const totalDuration = Tone.Time(measures).toSeconds();
-        const now = Tone.now(); 
-        
+        const speed = document.getElementById('speed-select').value; const now = Tone.now(); 
         songData.forEach(note => {
-             const time = now + note.time;
-             const soundName = trackAssignments[note.track]; 
-             const velocity = (note.velocity > 0.8) ? 1 : 0.7;
-
-             if (soundName.startsWith('piano-')) {
-                 pianoSampler.triggerAttackRelease(soundName.replace('piano-', ''), speed, time, velocity);
-             } else if (soundName.startsWith('bass-')) {
-                 bassSynth.triggerAttackRelease(soundName.replace('bass-', ''), speed, time, velocity);
-             } else if (soundName.startsWith('fx-')) {
-                 fxSynth.triggerAttackRelease(soundName.replace('fx-', ''), "16n", time, velocity);
-             } else {
-                 if(drumPlayers.has(soundName)){
-                     const player = drumPlayers.player(soundName);
-                     player.volume.value = (note.velocity > 0.8) ? 0 : -6;
-                     player.start(time);
-                 }
+             const trackIndex = trackIds.indexOf(note.track);
+             if (trackIndex !== -1 && trackIndex < visibleTrackCount) {
+                 const time = now + note.time; const soundName = trackAssignments[note.track]; const velocity = (note.velocity > 0.8) ? 1 : 0.7;
+                 if (soundName.startsWith('piano-')) pianoSampler.triggerAttackRelease(soundName.replace('piano-', ''), speed, time, velocity);
+                 else if (soundName.startsWith('bass-')) bassSynth.triggerAttackRelease(soundName.replace('bass-', ''), speed, time, velocity);
+                 else if (soundName.startsWith('fx-')) fxSynth.triggerAttackRelease(soundName.replace('fx-', ''), "16n", time, velocity);
+                 else if(drumPlayers.has(soundName)) { const p = drumPlayers.player(soundName); p.volume.value = (note.velocity > 0.8) ? 0 : -6; p.start(time); }
              }
         });
-
         setTimeout(async () => {
-            const recording = await recorder.stop();
-            const url = URL.createObjectURL(recording);
-            const anchor = document.createElement("a");
-            anchor.download = "my_beat.webm";
-            anchor.href = url;
-            anchor.click();
-            alert("Download ready!");
-        }, (totalDuration + 0.5) * 1000); 
+            const blob = await recorder.stop(); const audioBuffer = await (new AudioContext()).decodeAudioData(await blob.arrayBuffer());
+            const encoder = new lamejs.Mp3Encoder(1, audioBuffer.sampleRate, 128); 
+            const samples = audioBuffer.getChannelData(0); const sampleData = new Int16Array(samples.length);
+            for (let i = 0; i < samples.length; i++) sampleData[i] = samples[i] < 0 ? samples[i] * 0x8000 : samples[i] * 0x7FFF;
+            const mp3Data = []; const blockSize = 1152;
+            for (let i = 0; i < sampleData.length; i += blockSize) mp3Data.push(encoder.encodeBuffer(sampleData.subarray(i, i + blockSize)));
+            mp3Data.push(encoder.flush());
+            const link = document.createElement("a"); link.download = "my_beat.mp3"; link.href = URL.createObjectURL(new Blob(mp3Data, { type: 'audio/mp3' })); link.click(); alert("Download ready!");
+        }, (Tone.Time(measureCount + "m").toSeconds() + 0.5) * 1000); 
     }
-
-    function updateTempo() {
-        Tone.Transport.bpm.value = document.getElementById('bpm-input').value;
-    }
-
+    function updateTempo() { Tone.Transport.bpm.value = document.getElementById('bpm-input').value; }
     window.onload = function() { buildGrid(); updateTempo(); };
   </script>
 </body>

@@ -1,4 +1,4 @@
-import json  # <--- Added this to fix the "json is not defined" error
+import json
 import os
 import io
 
@@ -10,17 +10,39 @@ from django.contrib import messages
 from django.http import JsonResponse, HttpResponse, HttpResponseForbidden
 from django.views.decorators.csrf import csrf_exempt, ensure_csrf_cookie
 
-# ----------- Consolidated Imports -----------
-# I combined your duplicate imports here. 
-# Note: If 'Post' is not in your models.py, remove it from this list.
-# Your main forum uses 'Message', so 'Post' might be a typo in the new function.
-from .models import Message, Reply, Composition
+# --- IMPORTS ---
+# Added UserSound to this list so we can save uploads
+from .models import Message, Reply, Composition, UserSound
 from .forms import MessageForm, ReplyForm
 
-# ----------- Public Views -----------
+# ----------- Main / Public Views -----------
 
 def default_greet(request):
-    return render(request, 'greet.html')
+    # 1. HANDLE FILE UPLOAD
+    if request.method == 'POST' and request.FILES.get('custom_sound'):
+        if request.user.is_authenticated:
+            sound_file = request.FILES['custom_sound']
+            # Use provided name or filename fallback
+            sound_name = request.POST.get('sound_name', sound_file.name)
+            
+            # Save to Database
+            UserSound.objects.create(
+                user=request.user,
+                name=sound_name,
+                audio_file=sound_file
+            )
+            messages.success(request, "Sound uploaded successfully!")
+            return redirect('home') # Refresh page to show new sound
+
+    # 2. GET USER'S SOUNDS (To fill the dropdown)
+    user_sounds = []
+    if request.user.is_authenticated:
+        user_sounds = UserSound.objects.filter(user=request.user)
+
+    # 3. RENDER PAGE
+    return render(request, 'greet.html', {
+        'user_sounds': user_sounds
+    })
 
 def second_page(request):
     return render(request, 'second_page.html')
@@ -34,7 +56,7 @@ def login_page(request):
             user = form.get_user()
             login(request, user)
             messages.success(request, f"Welcome back, {user.username}!")
-            return redirect('home') # Changed to redirect to home/greet
+            return redirect('home') 
         else:
             messages.error(request, "Invalid username or password.")
     else:
@@ -47,7 +69,6 @@ def logout_view(request):
         messages.success(request, "You have been logged out.")
         return redirect('login_page')
     
-    # Fallback if accessed via GET (though your template now uses POST)
     logout(request) 
     return redirect('login_page')
 
@@ -65,12 +86,10 @@ def signup_page(request):
 # ----------- Forum Views -----------
 
 def forum_view(request):
-    # 1. Check if user is logged in
     if not request.user.is_authenticated:
         messages.error(request, "You must be logged in to access the forums.")
         return redirect('login_page')
 
-    # 2. If logged in, proceed as normal
     posts = Message.objects.all().order_by('-created_at')
     reply_form = ReplyForm()
     
@@ -78,8 +97,6 @@ def forum_view(request):
         reply_form = ReplyForm(request.POST)
         if reply_form.is_valid():
             msg_id = request.POST.get('message_id')
-            
-            # --- NEW: Check if msg_id exists before using it ---
             if msg_id: 
                 parent = get_object_or_404(Message, id=msg_id)
                 reply = reply_form.save(commit=False)
@@ -89,9 +106,7 @@ def forum_view(request):
                 messages.success(request, "Reply posted successfully!")
                 return redirect('forum')
             else:
-                # If no ID (user didn't click reply on a specific post)
                 messages.error(request, "To reply, please click the 'Reply' link on a specific post.")
-                # If they were trying to make a NEW post, they should use the other page
     
     return render(request, 'forum/forum.html', {
         'posts': posts,
@@ -134,8 +149,6 @@ def reply_message(request, message_id):
 @login_required
 def edit_message(request, message_id):
     message = get_object_or_404(Message, id=message_id)
-    
-    # UPDATED: Allow if user is Author OR Superuser
     if message.user != request.user and not request.user.is_superuser:
         return HttpResponseForbidden("You don't have permission to edit this message.")
         
@@ -152,18 +165,14 @@ def edit_message(request, message_id):
 @login_required
 def delete_message(request, message_id):
     message = get_object_or_404(Message, id=message_id)
-    
-    # UPDATED: Allow if user is Author OR Superuser
     if message.user != request.user and not request.user.is_superuser:
         return HttpResponseForbidden("You don't have permission to delete this message.")
     
-    # If POST request, actually delete
     if request.method == 'POST':
         message.delete()
         messages.success(request, "Message deleted.")
         return redirect('forum')
         
-    # If GET request, show confirmation page
     return render(request, 'forum/delete_confirm.html', {'message': message})
 
 # ----------- Composition Views -----------
@@ -176,6 +185,10 @@ def save_composition(request):
             received_title = data.get('title', 'Untitled Beat')
             user_instance = request.user if request.user.is_authenticated else None
 
+            # Note: I changed 'Composition' to 'settings' in previous JS.
+            # If your JS sends 'settings', you might want to save that too.
+            # For now, this just saves the notes.
+            
             new_comp = Composition.objects.create(
                 user=user_instance,
                 title=received_title,
@@ -189,30 +202,14 @@ def save_composition(request):
     return JsonResponse({'status': 'error', 'message': 'Invalid request method'}, status=400)
 
 
-# ----------- New / Redundant Views -----------
-
-# This function uses 'Post' instead of 'Message'. 
-# If your model is named 'Message', this function will fail unless you rename 'Post' to 'Message'.
-def delete_post(request, pk):
-    # 1. Get the post object or show 404 if not found
-    post = get_object_or_404(Post, pk=pk)
-
-    # 2. If the user clicked "Confirm" (POST request), delete it
-    if request.method == "POST":
-        post.delete()
-        return redirect('forum') # Redirects back to the main forum page
-
-    # 3. If it's a GET request, show the confirmation page
-    return render(request, 'forum/delete_confirm.html', {'post': post})
+# ----------- Helper Views -----------
 
 @login_required
 def edit_reply(request, pk):
     reply = get_object_or_404(Reply, pk=pk)
-    
-    # Security check: Ensure user owns the reply or is superuser
     if request.user != reply.user and not request.user.is_superuser:
         messages.error(request, "You are not allowed to edit this reply.")
-        return redirect('forum') # Redirect back to forum
+        return redirect('forum')
 
     if request.method == 'POST':
         form = ReplyForm(request.POST, instance=reply)
@@ -228,8 +225,6 @@ def edit_reply(request, pk):
 @login_required
 def delete_reply(request, pk):
     reply = get_object_or_404(Reply, pk=pk)
-
-    # Security check
     if request.user != reply.user and not request.user.is_superuser:
         messages.error(request, "You cannot delete this reply.")
         return redirect('forum')
@@ -239,5 +234,4 @@ def delete_reply(request, pk):
         messages.success(request, "Reply deleted.")
         return redirect('forum')
 
-    # Ask for confirmation before deleting
     return render(request, 'forum/delete_confirm.html', {'object': reply})

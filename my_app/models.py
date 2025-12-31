@@ -20,19 +20,26 @@ class Reply(models.Model):
     def __str__(self):
         return f"Reply by {self.user.username} on {self.created_at}"
 
-# === MUSIC COMPOSITION MODEL (New) ===
+# === MUSIC COMPOSITION MODEL (Existing) ===
 class Composition(models.Model):
-    # Link to the user (optional, so guests could theoretically save if you wanted later)
     user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
-    
-    # Title of the track
     title = models.CharField(max_length=200, default="Untitled Beat")
-    
-    # The JSONField stores the entire song data (e.g., [{"drum": "Kick", "time": 0.5}, ...])
     note_data = models.JSONField(default=list) 
-    
-    # Timestamp
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return self.title
+
+# === USER SOUNDS MODEL (New) ===
+class UserSound(models.Model):
+    # Link the sound to the user who uploaded it
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    
+    # The name they give the sound (e.g. "My Kick Drum")
+    name = models.CharField(max_length=50)
+    
+    # The actual file. 'upload_to' tells Django which subfolder in 'media' to use.
+    audio_file = models.FileField(upload_to='user_samples/')
+
+    def __str__(self):
+        return f"{self.name} ({self.user.username})"
